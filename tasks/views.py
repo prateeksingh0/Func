@@ -23,7 +23,7 @@ def yd(request):
             ydl_opts = {
                 'format': 'bestaudio/best' if download_type == "audio" else 'best',
                 'outtmpl': file_path,
-                'cookiefile': 'cookie.txt',
+                'cookiefile': os.path.join(DOWNLOAD_FOLDER,'cookie.txt'),
             }
 
             with yt_dlp.YoutubeDL(ydl_opts) as ydl:

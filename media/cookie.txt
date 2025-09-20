@@ -1,0 +1,1 @@
+[{"domain": ".youtube.com", "expirationDate": 1758404651.734566, "hostOnly": false, "httpOnly": true, "name": "GPS", "path": "/", "sameSite": "unspecified", "secure": true, "session": false, "storeId": "0", "value": "1"}]
