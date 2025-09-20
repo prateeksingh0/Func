@@ -22,7 +22,10 @@ def yd(request):
 
             ydl_opts = {
                 'format': 'bestaudio/best' if download_type == "audio" else 'best',
-                'outtmpl': file_path
+                'outtmpl': file_path,
+                'quiet': True, 
+                'referer': 'https://www.youtube.com/',
+                'user_agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36', 
             }
 
             with yt_dlp.YoutubeDL(ydl_opts) as ydl:
