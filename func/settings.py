@@ -122,7 +122,7 @@ STATIC_URL = 'static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-ALLOWED_HOSTS = ['func-pdyh.onrender.com']
+ALLOWED_HOSTS = ['func-pdyh.onrender.com','127.0.0.1']
 CSRF_TRUSTED_ORIGINS = [
     'https://func-pdyh.onrender.com',
 ]
