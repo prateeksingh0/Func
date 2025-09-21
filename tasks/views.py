@@ -10,6 +10,10 @@ DOWNLOAD_FOLDER = "media"
 
 os.makedirs(DOWNLOAD_FOLDER, exist_ok=True)
 
+
+def home(request):
+    return render(request, "home.html")
+
 def yd(request):
     if request.method == "POST":
         form = YouTubeForm(request.POST)
@@ -45,3 +49,6 @@ def yd(request):
         form = YouTubeForm()
 
     return render(request, "yd.html", {'form': form})
+
+def share(request):
+    return render(request, "fileshare.html")
