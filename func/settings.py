@@ -37,6 +37,8 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    "crispy_forms",
+    "crispy_bootstrap5",
     'tasks',
 ]
 
@@ -126,4 +128,7 @@ ALLOWED_HOSTS = ['func-pdyh.onrender.com','127.0.0.1']
 CSRF_TRUSTED_ORIGINS = [
     'https://func-pdyh.onrender.com',
 ]
+
+CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
+CRISPY_TEMPLATE_PACK = "bootstrap5" 
 
