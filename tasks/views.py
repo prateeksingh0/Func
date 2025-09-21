@@ -4,8 +4,6 @@ from django.conf import settings
 from django.http import FileResponse, HttpResponse
 from .forms import YouTubeForm
 import yt_dlp
-
-from yt_dlp.cookies import SUPPORTED_BROWSERS
 import os
 
 DOWNLOAD_FOLDER = "media"
@@ -25,7 +23,7 @@ def yd(request):
             ydl_opts = {
                 'format': 'bestaudio/best' if download_type == "audio" else 'best',
                 'outtmpl': file_path,
-                'cookiefilefrombrower':('chrome','firefox','edge','safari'),
+                'cookiefile': os.path.join(DOWNLOAD_FOLDER,'cookie.txt'),
             }
 
             with yt_dlp.YoutubeDL(ydl_opts) as ydl:
