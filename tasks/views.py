@@ -6,6 +6,7 @@ from .forms import YouTubeForm
 import yt_dlp
 import os
 import subprocess
+import requests
 
 # DOWNLOAD_FOLDER = "media"
 
@@ -57,35 +58,29 @@ def yd(request):
             download_type = form.cleaned_data['download_type']  # "audio" or "video"
 
             try:
-                # Set file extension and yt-dlp format
-                ext = "mp3" if download_type == "audio" else "mp4"
-                ydl_format = "bestaudio/best" if download_type == "audio" else "best"
+                ydl_opts = {
+                    'format': 'bestaudio/best' if download_type=='audio' else 'best',
+                    'quiet': True,
+                }
 
-                # Generator to stream yt-dlp output
+                with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+                    info = ydl.extract_info(url, download=False)
+                    media_url = info.get('url')
+                    ext = info.get('ext', 'mp4')
+                    title = info.get('title', 'youtube')
+                    filename = f"{title}.{ext}"
+
+                if not media_url:
+                    return HttpResponse("Cannot fetch media URL", status=400)
+
+                # Stream media via requests in large chunks
                 def stream_generator():
-                    cmd = [
-                        "yt-dlp",
-                        "-f", ydl_format,
-                        url,
-                        "-o", "-",  # write to stdout
-                    ]
-                    # For audio conversion to mp3
-                    if download_type == "audio":
-                        cmd += ["--extract-audio", "--audio-format", "mp3", "--audio-quality", "0"]
+                    with requests.get(media_url, stream=True) as r:
+                        for chunk in r.iter_content(chunk_size=1024*64):
+                            if chunk:
+                                yield chunk
 
-                    process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
-                    for chunk in iter(lambda: process.stdout.read(4096), b""):
-                        yield chunk
-                    process.stdout.close()
-                    process.wait()
-
-                # Prepare filename for browser
-                filename = f"youtube_download.{ext}"
-
-                response = StreamingHttpResponse(
-                    stream_generator(),
-                    content_type="application/octet-stream"
-                )
+                response = StreamingHttpResponse(stream_generator(), content_type='application/octet-stream')
                 response['Content-Disposition'] = f'attachment; filename="{filename}"'
                 return response
 
