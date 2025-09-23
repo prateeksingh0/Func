@@ -1,7 +1,7 @@
 # views.py
 from django.shortcuts import render
 from django.conf import settings
-from django.http import FileResponse, HttpResponse, StreamingHttpResponse
+from django.http import FileResponse, HttpResponse, StreamingHttpResponse, HttpResponseRedirect
 from .forms import YouTubeForm
 import yt_dlp
 import os
@@ -61,29 +61,22 @@ def yd(request):
                 ydl_opts = {
                     'format': 'bestaudio/best' if download_type=='audio' else 'best',
                     'quiet': True,
+                    'noplaylist': True  # optional: avoid playlists
                 }
 
+                # Extract media info and direct URL
                 with yt_dlp.YoutubeDL(ydl_opts) as ydl:
                     info = ydl.extract_info(url, download=False)
                     media_url = info.get('url')
-                    ext = info.get('ext', 'mp4')
-                    title = info.get('title', 'youtube')
-                    filename = f"{title}.{ext}"
 
                 if not media_url:
-                    return HttpResponse("Cannot fetch media URL", status=400)
+                    return HttpResponse("Cannot fetch media URL. Video may be restricted or require sign-in.", status=400)
 
-                # Stream media via requests in large chunks
-                def stream_generator():
-                    with requests.get(media_url, stream=True) as r:
-                        for chunk in r.iter_content(chunk_size=1024*64):
-                            if chunk:
-                                yield chunk
+                # Redirect the user to the direct media URL
+                return HttpResponseRedirect(media_url)
 
-                response = StreamingHttpResponse(stream_generator(), content_type='application/octet-stream')
-                response['Content-Disposition'] = f'attachment; filename="{filename}"'
-                return response
-
+            except yt_dlp.utils.DownloadError:
+                return HttpResponse("This video cannot be downloaded without sign-in or is restricted.", status=403)
             except Exception as e:
                 return HttpResponse(f"Error: {str(e)}", status=500)
 
