@@ -1,9 +1,10 @@
 # views.py
 from django.shortcuts import render
-from django.http import StreamingHttpResponse, HttpResponse
+from django.http import FileResponse, HttpResponse
 from .forms import YouTubeForm
 import yt_dlp
-import os, tempfile, requests
+import os, tempfile
+
 
 
 def home(request):
@@ -14,9 +15,9 @@ def yd(request):
         form = YouTubeForm(request.POST)
         if form.is_valid():
             url = form.cleaned_data['url']
-            download_type = form.cleaned_data['download_type']  # "audio" or "video"
+            download_type = form.cleaned_data['download_type']
 
-            # Optional cookies
+
             cookies_content = os.getenv("YTDLP_COOKIES")
             cookies_file_path = None
             if cookies_content:
@@ -25,51 +26,34 @@ def yd(request):
                 tmp_cookie_file.close()
                 cookies_file_path = tmp_cookie_file.name
 
-            # Use single-file format
-            if download_type == 'audio':
-                ydl_format = 'bestaudio[ext=m4a]'
-            else:
-                ydl_format = 'best[ext=mp4]'  # video+audio in one MP4 file
+            # Temporary file path
+            with tempfile.TemporaryDirectory() as tmpdirname:
+                file_path = os.path.join(tmpdirname, "%(title)s.%(ext)s")
 
+            
             ydl_opts = {
-                'format': ydl_format,
-                'quiet': True,
-                'noplaylist': True
+                'format': 'bestaudio/best' if download_type == "audio" else 'best',
+                'outtmpl': file_path,
+                'cookiefile':cookies_file_path,
             }
-            if cookies_file_path:
-                ydl_opts['cookiefile'] = cookies_file_path
-
-            try:
+            try: 
                 with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-                    info = ydl.extract_info(url, download=False)
+                    info = ydl.extract_info(url, download=True)
+                    filename = ydl.prepare_filename(info)
 
-                    media_url = info.get('url')
-                    if not media_url:
-                        return HttpResponse("Cannot fetch media URL. Try a different format.", status=400)
-
-                    ext = info.get('ext', 'mp4')
-                    content_type = f'audio/{ext}' if download_type=='audio' else f'video/{ext}'
-
-                    # Stream generator
-                    def stream_generator(url):
-                        with requests.get(url, stream=True) as r:
-                            r.raise_for_status()
-                            for chunk in r.iter_content(chunk_size=8192):
-                                if chunk:
-                                    yield chunk
-
-                    response = StreamingHttpResponse(stream_generator(media_url), content_type=content_type)
-                    response['Content-Disposition'] = f'attachment; filename="{info.get("title")}.{ext}"'
+                # Serve file as download
+                if os.path.exists(filename):
+                    file = open(filename, 'rb')
+                    response = FileResponse(file)
+                    response['Content-Disposition'] = f'attachment; filename="{os.path.basename(filename)}"'
+                    
                     return response
-
-            except yt_dlp.utils.ExtractorError:
-                return HttpResponse("Requested format not available.", status=400)
-            except yt_dlp.utils.DownloadError:
-                return HttpResponse("Video cannot be accessed or is restricted.", status=403)
+                else:
+                    return HttpResponse("Error: File not found.")
+                
             finally:
                 if cookies_file_path and os.path.exists(cookies_file_path):
                     os.remove(cookies_file_path)
-
     else:
         form = YouTubeForm()
 
