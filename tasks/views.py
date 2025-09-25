@@ -6,10 +6,6 @@ import yt_dlp
 import os, tempfile
 from django.conf import settings
 
-# DOWNLOAD_FOLDER = "media"
-
-# os.makedirs(DOWNLOAD_FOLDER, exist_ok=True)
-
 
 def home(request):
     return render(request, "home.html")
@@ -20,25 +16,22 @@ def yd(request):
         if form.is_valid():
             url = form.cleaned_data['url']
             download_type = form.cleaned_data['download_type']
-
-            # Temporary file path
-            # file_path = os.path.join(DOWNLOAD_FOLDER, "%(title)s.%(ext)s")
             
             cookies_content = os.getenv("YTDLP_COOKIES")
             if not cookies_content:
                 return HttpResponse("No cookies found in environment variables.", status=500)
             with tempfile.NamedTemporaryFile(delete=False, mode='w', encoding='utf-8') as tmp_cookie_file:
                 tmp_cookie_file.write(cookies_content)
+                tmp_cookie_file.close()
                 cookies_file_path = tmp_cookie_file.name
 
             temp_dir = tempfile.mkdtemp()
 
-            # settings.YT_DOWNLOAD_FILE_PATH = file_path
             ydl_opts = {
-                'format': 'bestaudio/best' if download_type == "audio" else 'best',
-                # 'outtmpl': file_path,
+                'format': 'bestaudio/best' if download_type == "audio" else 'bestvideo+bestaudio/best',
                 'outtmpl': os.path.join(temp_dir, '%(title)s.%(ext)s'),
                 'cookiefile': cookies_file_path,
+                'quiet':True
             }
 
             try:
