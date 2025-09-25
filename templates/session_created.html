@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="d-flex flex-column justify-content-center align-items-center text-center my-5">
+    <h2 class="mb-3">Session Created</h2>
+    <p class="mb-4">Share this OTP with friends: <strong>{{ session.otp }}</strong></p>
+    <a class="btn btn-success btn-lg" href="{% url 'upload_files_to_session' session.id %}">
+        Upload Files / Folder
+    </a>
+</div>
+{% endblock content %}

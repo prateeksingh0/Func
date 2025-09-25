@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+{% load crispy_forms_tags %}
+
+{% block content %}
+<div class="container-fluid my-4">
+
+    <!-- Heading + Add Files Button -->
+    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap">
+        <h2 class="mb-2 mb-md-0">Files in Session {{ session.otp }}</h2>
+        <form method="get" action="{% url 'add_files' session.id %}" class="mb-2 mb-md-0">
+            <button type="submit" class="btn btn-success">Add More Files</button>
+        </form>
+    </div>
+
+    {% if session.files.exists %}
+
+    <!-- Responsive table with horizontal scroll on mobile -->
+    <div class="table-responsive">
+        <table class="table table-striped" style="min-width: 600px;">
+            <thead>
+                <tr>
+                    <th scope="col" class="ps-3">#</th>
+                    <th scope="col">NAME</th>
+                    <th scope="col" class="text-center">DOWNLOAD</th>
+                    <th scope="col" class="text-end pe-3">DELETE</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for f in session.files.all %}
+                <tr>
+                    <th scope="row" class="text-truncate ps-3">{{ forloop.counter }}</th>
+                    <td class="text-truncate" title="{{ f.filename }}">{{ f.filename }}</td>
+                    <td class="text-center">
+                        <a class="btn btn-success btn-sm" href="{% url 'download_file' f.id %}">Download</a>
+                    </td>
+                    <td class="text-end pe-3">
+                        <form method="post" action="{% url 'delete_file' f.id %}">
+                            {% csrf_token %}
+                            <button class="btn btn-danger btn-sm" type="submit">Delete</button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Download / Delete All Buttons -->
+    <div class="d-flex flex-column flex-md-row gap-2 mt-3">
+        <form id="downloadAllForm" method="get" action="{% url 'download_all_files' session.id %}">
+            <button type="submit" class="btn btn-success w-100 w-md-auto">Download All Files</button>
+        </form>
+        <form method="post" action="{% url 'delete_session' session.id %}">
+            {% csrf_token %}
+            <button class="btn btn-danger w-100 w-md-auto" type="submit">Delete Whole Session</button>
+        </form>
+    </div>
+
+    {% endif %}
+
+</div>
+<script>
+    document.getElementById('downloadAllForm').addEventListener('click', function () {
+        // Create a temporary <a> element to trigger download
+        const link = document.createElement('a');
+        link.href = "{% url 'download_all_files' session.id %}";
+        link.download = ""; // lets browser treat it as download
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+
+        // Redirect to home AFTER a short delay to ensure download starts
+        setTimeout(() => {
+            window.location.href = "{% url 'share' %}";
+        }, 500); // half a second delay
+    });
+</script>
+{% endblock content %}

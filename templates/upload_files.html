@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% load crispy_forms_tags %}
+
+{% block content %}
+<div class="container my-4">
+    <h2 class="mb-4 text-center">Upload Files or Folder to Session No. {{ session.otp }}</h2>
+
+    <form method="post" enctype="multipart/form-data" class="row g-3">
+        {% csrf_token %}
+        {{ form | crispy }}
+
+        <!-- Multiple Files -->
+        <div class="col-12 col-md-6">
+            <label for="formFileMultiple" class="form-label">Select Multiple Files:</label>
+            <input class="form-control" type="file" id="formFileMultiple" name="files" multiple>
+        </div>
+
+        <!-- Folder Upload -->
+        <div class="col-12 col-md-6">
+            <label for="formFolder" class="form-label">Or Select A Folder:</label>
+            <input class="form-control" type="file" id="formFolder" name="folder_files" webkitdirectory directory multiple>
+        </div>
+
+        <!-- Submit Button -->
+        <div class="col-12 d-flex justify-content-center mt-2 ">
+            <button class="btn btn-success btn-lg" type="submit">Upload</button>
+        </div>
+    </form>
+</div>
+{% endblock content %}

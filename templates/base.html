@@ -17,7 +17,7 @@
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
-                <div class="navbar-nav">
+                <div class="navbar-nav ms-auto">
                 {% if request.resolver_match.url_name != 'yd' %}
                     <a class="nav-link" href="{% url 'yd' %}">YouTube Downloader</a>
                 {% endif %}
@@ -30,7 +30,7 @@
         </div>
     </nav>
     <main>
-        <div class="container-fluid">
+        <div class="container-fluid my-4">
             {% block content %}
             {% endblock content %}
         </div>

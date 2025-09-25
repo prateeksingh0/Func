@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% load crispy_forms_tags %}
+
+{% block content %}
+<div class="d-flex justify-content-center align-items-center" style="min-height: 60vh;">
+    <div class="w-100" style="max-width: 400px;">
+        <h2 class="text-center mb-4">Enter OTP to Access Files</h2>
+        <form method="post" class="d-flex flex-column gap-3">
+            {% csrf_token %}
+            {{ form | crispy }}
+            <input type="text" name="otp" class="form-control" placeholder="Enter OTP" required>
+            <button class="btn btn-success w-100" type="submit">Access Files</button>
+        </form>
+    </div>
+</div>
+{% endblock content %}
