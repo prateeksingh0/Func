@@ -16,7 +16,7 @@ def yd(request):
             url = form.cleaned_data['url']
             download_type = form.cleaned_data['download_type']  # "audio" or "video"
 
-            # Optional cookies for restricted videos
+            # Optional cookies
             cookies_content = os.getenv("YTDLP_COOKIES")
             cookies_file_path = None
             if cookies_content:
@@ -25,8 +25,11 @@ def yd(request):
                 tmp_cookie_file.close()
                 cookies_file_path = tmp_cookie_file.name
 
-            # Format selection: let yt-dlp choose best available
-            ydl_format = 'bestaudio/best' if download_type == 'audio' else 'bestvideo+bestaudio/best'
+            # Use single-file format
+            if download_type == 'audio':
+                ydl_format = 'bestaudio[ext=m4a]'
+            else:
+                ydl_format = 'best[ext=mp4]'  # video+audio in one MP4 file
 
             ydl_opts = {
                 'format': ydl_format,
@@ -38,28 +41,22 @@ def yd(request):
 
             try:
                 with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-                    # Extract info without downloading
                     info = ydl.extract_info(url, download=False)
+
                     media_url = info.get('url')
                     if not media_url:
-                        return HttpResponse("Cannot fetch media URL.", status=400)
+                        return HttpResponse("Cannot fetch media URL. Try a different format.", status=400)
 
-                    # Determine original extension
-                    ext = info.get('ext', 'mp4')  # fallback to mp4
+                    ext = info.get('ext', 'mp4')
+                    content_type = f'audio/{ext}' if download_type=='audio' else f'video/{ext}'
 
-                    # Stream the media URL
+                    # Stream generator
                     def stream_generator(url):
                         with requests.get(url, stream=True) as r:
                             r.raise_for_status()
                             for chunk in r.iter_content(chunk_size=8192):
                                 if chunk:
                                     yield chunk
-
-                    # Set MIME type based on original extension
-                    if download_type == 'audio':
-                        content_type = f'audio/{ext}'
-                    else:
-                        content_type = f'video/{ext}'
 
                     response = StreamingHttpResponse(stream_generator(media_url), content_type=content_type)
                     response['Content-Disposition'] = f'attachment; filename="{info.get("title")}.{ext}"'
