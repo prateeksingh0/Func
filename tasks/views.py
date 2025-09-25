@@ -1,12 +1,9 @@
 # views.py
 from django.shortcuts import render
-from django.conf import settings
 from django.http import FileResponse, HttpResponse, StreamingHttpResponse, HttpResponseRedirect
 from .forms import YouTubeForm
 import yt_dlp
-import os
-import subprocess
-import requests
+import os, tempfile
 
 # DOWNLOAD_FOLDER = "media"
 
@@ -58,10 +55,17 @@ def yd(request):
             download_type = form.cleaned_data['download_type']  # "audio" or "video"
 
             try:
+                cookies_content = os.getenv("YTDLP_COOKIES")
+
+                with tempfile.NamedTemporaryFile(delete=False, mode='w', encoding='utf-8') as tmp_file:
+                    tmp_file.write(cookies_content)
+                    cookies_file_path = tmp_file.name
+
                 ydl_opts = {
                     'format': 'bestaudio/best' if download_type=='audio' else 'best',
                     'quiet': True,
-                    'noplaylist': True  # optional: avoid playlists
+                    'noplaylist': True,
+                    'cookiefile': cookies_file_path
                 }
 
                 # Extract media info and direct URL
