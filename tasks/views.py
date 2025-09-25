@@ -51,6 +51,10 @@ def yd(request):
                 # Serve the downloaded file
                 if os.path.exists(filename):
                     response = FileResponse(open(filename, 'rb'))
+                    if download_type == 'audio':
+                        response['Content-Type'] = 'audio/mp4'
+                    else:
+                        response['Content-Type'] = 'video/mp4'
                     response['Content-Disposition'] = f'attachment; filename="{os.path.basename(filename)}"'
                     return response
                 else:
